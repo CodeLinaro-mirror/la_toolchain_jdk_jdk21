@@ -1,0 +1,17 @@
+name: "toolchain/jdk/jdk21"
+description:
+    "Source for OpenJDK21"
+
+third_party {
+  url {
+    type: HOMEPAGE
+    value: "https://github.com/openjdk/jdk21u"
+  }
+  url {
+    type: GIT
+    value: "https://github.com/openjdk/jdk21u.git"
+  }
+  version: "jdk-21-ga"
+  last_upgrade_date { year: 2023 month: 10 day: 6 }
+  license_type: RESTRICTED
+}
