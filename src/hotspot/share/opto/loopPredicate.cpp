@@ -1035,9 +1035,10 @@ BoolNode* PhaseIdealLoop::rc_predicate(IdealLoopTree* loop, Node* ctrl, int scal
     // Check if (scale * max_idx_expr) may overflow
     const TypeInt* scale_type = TypeInt::make(scale);
     MulINode* mul = new MulINode(max_idx_expr, con_scale);
-    idx_type = (TypeInt*)mul->mul_ring(idx_type, scale_type);
-    if (overflow || TypeInt::INT->higher_equal(idx_type)) {
+
+    if (overflow || MulINode::does_overflow(idx_type, scale_type)) {
       // May overflow
+      idx_type = TypeInt::INT;
       mul->destruct(&_igvn);
       if (!overflow) {
         max_idx_expr = new ConvI2LNode(max_idx_expr);
@@ -1050,6 +1051,7 @@ BoolNode* PhaseIdealLoop::rc_predicate(IdealLoopTree* loop, Node* ctrl, int scal
     } else {
       // No overflow possible
       max_idx_expr = mul;
+      idx_type = (TypeInt*)mul->mul_ring(idx_type, scale_type);
     }
     register_new_node(max_idx_expr, ctrl);
   }
@@ -1144,7 +1146,7 @@ bool PhaseIdealLoop::loop_predication_should_follow_branches(IdealLoopTree* loop
         CountedLoopNode* cl = head->as_CountedLoop();
         if (cl->phi() != nullptr) {
           const TypeInt* t = _igvn.type(cl->phi())->is_int();
-          float worst_case_trip_cnt = ((float)t->_hi - t->_lo) / ABS(cl->stride_con());
+          float worst_case_trip_cnt = ((float)t->_hi - t->_lo) / ABS((float)cl->stride_con());
           if (worst_case_trip_cnt < loop_trip_cnt) {
             loop_trip_cnt = worst_case_trip_cnt;
           }
